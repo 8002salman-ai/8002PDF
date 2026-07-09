@@ -79,9 +79,6 @@ export default function PDFToImage() {
               </button>
             ))}
           </div>
-          <p className="text-xs text-gray-400 mt-3">
-            Note: Full page rendering requires pdfjs-dist integration. Current output shows page dimensions.
-          </p>
         </div>
       )}
 

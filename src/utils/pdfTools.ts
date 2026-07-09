@@ -217,59 +217,41 @@ export async function imagesToPdf(files: File[]): Promise<Uint8Array> {
   return pdf.save();
 }
 
-// ===== PDF TO IMAGE (using canvas) =====
+// ===== PDF TO IMAGE (using pdf.js) =====
 export async function pdfToImages(
   file: File,
   format: 'png' | 'jpeg' = 'png',
   scale: number = 2
 ): Promise<{ name: string; blob: Blob }[]> {
-  // We'll use a simple canvas-based approach with pdf-lib to get page dimensions
-  // and render using an offscreen approach
-  // Since pdf-lib can't render, we'll return page info
-  // For actual rendering, we'd need pdfjs-dist, but to keep it simple we'll 
-  // extract embedded images instead
-  
+  const pdfjs = await import('pdfjs-dist');
+  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+  const pdf = await pdfjs.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
   const results: { name: string; blob: Blob }[] = [];
-  
-  // Create a simple representation of each page
-  const pages = pdf.getPages();
-  for (let i = 0; i < pages.length; i++) {
-    const page = pages[i];
-    const { width, height } = page.getSize();
-    
-    // Create a canvas with page info
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale });
+
     const canvas = document.createElement('canvas');
-    canvas.width = width * scale;
-    canvas.height = height * scale;
-    const ctx = canvas.getContext('2d')!;
-    
-    // White background
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw page number info
-    ctx.fillStyle = '#333333';
-    ctx.font = `${24 * scale}px Arial`;
-    ctx.textAlign = 'center';
-    ctx.fillText(`Page ${i + 1}`, canvas.width / 2, canvas.height / 2 - 20 * scale);
-    ctx.font = `${14 * scale}px Arial`;
-    ctx.fillStyle = '#666666';
-    ctx.fillText(`${Math.round(width)} × ${Math.round(height)} pts`, canvas.width / 2, canvas.height / 2 + 20 * scale);
-    ctx.fillText('PDF Lover - Full rendering requires pdfjs-dist', canvas.width / 2, canvas.height / 2 + 50 * scale);
-    
-    // Border
-    ctx.strokeStyle = '#ddd';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
-    
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    const renderContext = {
+      canvasContext: canvas.getContext('2d')!,
+      viewport,
+      canvas,
+    };
+
+    await page.render(renderContext as any).promise;
+
     const blob = await new Promise<Blob>((resolve) =>
       canvas.toBlob((b) => resolve(b!), `image/${format}`, 0.92)
     );
-    results.push({ name: `page_${i + 1}.${format}`, blob });
+    results.push({ name: `page_${i}.${format}`, blob });
   }
-  
+
   return results;
 }
 

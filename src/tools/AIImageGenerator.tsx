@@ -21,29 +21,37 @@ export default function AIImageGenerator() {
     setImageUrl('');
 
     try {
-      // Using Pollinations.ai - FREE, no API key needed!
       const encodedPrompt = encodeURIComponent(prompt);
       const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&nologo=true`;
-      
-      // Preload the image
+
+      let isLoading = true;
+
       const img = new Image();
       img.onload = () => {
-        setImageUrl(url);
-        setLoading(false);
+        if (isLoading) {
+          isLoading = false;
+          setImageUrl(url);
+          setLoading(false);
+        }
       };
       img.onerror = () => {
-        setError('Failed to generate image. Try a different prompt.');
-        setLoading(false);
+        if (isLoading) {
+          isLoading = false;
+          setError('Failed to generate image. Try a different prompt.');
+          setLoading(false);
+        }
       };
       img.src = url;
-      
-      // Timeout after 60 seconds
-      setTimeout(() => {
-        if (loading) {
+
+      const timeoutId = setTimeout(() => {
+        if (isLoading) {
+          isLoading = false;
           setError('Generation timed out. Please try again.');
           setLoading(false);
         }
       }, 60000);
+
+      return () => clearTimeout(timeoutId);
     } catch (err) {
       setError('Failed to generate image');
       setLoading(false);
