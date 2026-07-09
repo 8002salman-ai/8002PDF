@@ -54,7 +54,7 @@ export default function AdBanner({ slot }: AdBannerProps) {
         // @ts-ignore
         (window.adsbygoogle = window.adsbygoogle || []).push({});
       } catch (e) {
-        console.log('AdSense push failed:', e);
+        // AdSense might not be loaded, silently continue
       }
     }
   }, [settings.adsterraEnabled, settings.adsenseEnabled, currentSlot.adsterra, currentSlot.adsense, settings.adsensePublisherId]);

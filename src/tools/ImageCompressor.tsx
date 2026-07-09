@@ -67,14 +67,17 @@ export default function ImageCompressor() {
     setProcessing(true);
     const compressed: CompressedImage[] = [];
 
-    for (const file of files) {
-      if (file.type.startsWith('image/')) {
-        const result = await compressImage(file);
-        compressed.push(result);
+    try {
+      for (const file of files) {
+        if (file.type.startsWith('image/')) {
+          const result = await compressImage(file);
+          compressed.push(result);
+        }
       }
+      setImages((prev) => [...prev, ...compressed]);
+    } catch (err) {
+      // Silently continue on error, user sees partial results
     }
-
-    setImages((prev) => [...prev, ...compressed]);
     setProcessing(false);
   };
 
