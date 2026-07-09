@@ -9,56 +9,7 @@ import Footer from './components/Footer';
 import AdBanner from './components/AdBanner';
 import DesktopSection from './components/DesktopSection';
 import { updateSEOMeta } from './utils/seoUtils';
-
-// PDF Tool pages
-import MergePDF from './tools/MergePDF';
-import SplitPDF from './tools/SplitPDF';
-import CompressPDF from './tools/CompressPDF';
-import ExtractPages from './tools/ExtractPages';
-import DeletePagesTool from './tools/DeletePages';
-import RotatePDF from './tools/RotatePDF';
-import WatermarkPDF from './tools/WatermarkPDF';
-import ImageToPDF from './tools/ImageToPDF';
-import PDFToImage from './tools/PDFToImage';
-import MetadataPDF from './tools/MetadataPDF';
-import ProtectPDF from './tools/ProtectPDF';
-
-// QR & Barcode
-import QRGenerator from './tools/QRGenerator';
-import QRScanner from './tools/QRScanner';
-import BarcodeGenerator from './tools/BarcodeGenerator';
-
-// Calculators
-import EbayCalculator from './tools/EbayCalculator';
-import LoanCalculator from './tools/LoanCalculator';
-import BMICalculator from './tools/BMICalculator';
-import PercentageCalculator from './tools/PercentageCalculator';
-import AgeCalculator from './tools/AgeCalculator';
-import UnitConverter from './tools/UnitConverter';
-
-// Text Tools
-import WordCounter from './tools/WordCounter';
-import CaseConverter from './tools/CaseConverter';
-import LoremGenerator from './tools/LoremGenerator';
-import Base64Tool from './tools/Base64Tool';
-
-// Developer Tools
-import JsonFormatter from './tools/JsonFormatter';
-import HashGenerator from './tools/HashGenerator';
-
-// Utilities
-import PasswordGenerator from './tools/PasswordGenerator';
-import ColorPicker from './tools/ColorPicker';
-import TimezoneConverter from './tools/TimezoneConverter';
-
-// Image Tools
-import ImageCompressor from './tools/ImageCompressor';
-
-// AI Tools
-import AIImageGenerator from './tools/AIImageGenerator';
-
-// Business Tools
-import InvoiceGenerator from './tools/InvoiceGenerator';
+import { getLazyTool } from './utils/lazyLoad';
 
 // Admin
 import AdminLogin from './admin/AdminLogin';
@@ -88,52 +39,50 @@ export default function App() {
     return <AdminPanel onLogout={() => setAdminLoggedIn(false)} onGoHome={() => navigate('home')} />;
   }
 
-  // All tool pages mapping
-  const toolPages: Record<string, React.ReactNode> = {
-    // PDF Tools
-    merge: settings.enableMerge && <MergePDF />,
-    split: settings.enableSplit && <SplitPDF />,
-    compress: settings.enableCompress && <CompressPDF />,
-    extract: settings.enableExtract && <ExtractPages />,
-    'delete-pages': settings.enableDeletePages && <DeletePagesTool />,
-    rotate: settings.enableRotate && <RotatePDF />,
-    watermark: settings.enableWatermark && <WatermarkPDF />,
-    'image-to-pdf': settings.enableImageToPdf && <ImageToPDF />,
-    'pdf-to-image': settings.enablePdfToImage && <PDFToImage />,
-    metadata: settings.enableMetadata && <MetadataPDF />,
-    protect: settings.enableProtect && <ProtectPDF />,
-    // QR & Barcode
-    'qr-generator': settings.enableQrGenerator && <QRGenerator />,
-    'qr-scanner': settings.enableQrScanner && <QRScanner />,
-    'barcode-generator': settings.enableBarcodeGenerator && <BarcodeGenerator />,
-    // Calculators
-    'ebay-calculator': settings.enableEbayCalculator && <EbayCalculator />,
-    'loan-calculator': settings.enableLoanCalculator && <LoanCalculator />,
-    'bmi-calculator': settings.enableBmiCalculator && <BMICalculator />,
-    'percentage-calculator': settings.enablePercentageCalculator && <PercentageCalculator />,
-    'age-calculator': settings.enableAgeCalculator && <AgeCalculator />,
-    'unit-converter': settings.enableUnitConverter && <UnitConverter />,
-    // Text Tools
-    'word-counter': settings.enableWordCounter && <WordCounter />,
-    'case-converter': settings.enableCaseConverter && <CaseConverter />,
-    'lorem-generator': settings.enableLoremGenerator && <LoremGenerator />,
-    'base64': settings.enableBase64 && <Base64Tool />,
-    // Developer Tools
-    'json-formatter': settings.enableJsonFormatter && <JsonFormatter />,
-    'hash-generator': settings.enableHashGenerator && <HashGenerator />,
-    // Utilities
-    'password-generator': settings.enablePasswordGenerator && <PasswordGenerator />,
-    'color-picker': settings.enableColorPicker && <ColorPicker />,
-    'timezone-converter': settings.enableTimezoneConverter && <TimezoneConverter />,
-    // Image
-    'image-compressor': settings.enableImageCompressor && <ImageCompressor />,
-    // AI
-    'ai-image-generator': settings.enableAiImageGenerator && <AIImageGenerator />,
-    // Business
-    'invoice-generator': settings.enableInvoiceGenerator && <InvoiceGenerator />,
+  // Tool enablement mapping
+  const toolSettings: Record<string, boolean> = {
+    merge: settings.enableMerge,
+    split: settings.enableSplit,
+    compress: settings.enableCompress,
+    extract: settings.enableExtract,
+    'delete-pages': settings.enableDeletePages,
+    rotate: settings.enableRotate,
+    watermark: settings.enableWatermark,
+    'image-to-pdf': settings.enableImageToPdf,
+    'pdf-to-image': settings.enablePdfToImage,
+    metadata: settings.enableMetadata,
+    protect: settings.enableProtect,
+    'qr-generator': settings.enableQrGenerator,
+    'qr-scanner': settings.enableQrScanner,
+    'barcode-generator': settings.enableBarcodeGenerator,
+    'ebay-calculator': settings.enableEbayCalculator,
+    'loan-calculator': settings.enableLoanCalculator,
+    'bmi-calculator': settings.enableBmiCalculator,
+    'percentage-calculator': settings.enablePercentageCalculator,
+    'age-calculator': settings.enableAgeCalculator,
+    'unit-converter': settings.enableUnitConverter,
+    'word-counter': settings.enableWordCounter,
+    'case-converter': settings.enableCaseConverter,
+    'lorem-generator': settings.enableLoremGenerator,
+    'base64': settings.enableBase64,
+    'json-formatter': settings.enableJsonFormatter,
+    'hash-generator': settings.enableHashGenerator,
+    'password-generator': settings.enablePasswordGenerator,
+    'color-picker': settings.enableColorPicker,
+    'timezone-converter': settings.enableTimezoneConverter,
+    'image-compressor': settings.enableImageCompressor,
+    'ai-image-generator': settings.enableAiImageGenerator,
+    'invoice-generator': settings.enableInvoiceGenerator,
   };
 
-  const isToolPage = currentPage !== 'home' && toolPages[currentPage];
+  // Lazy-load tools on demand (code splitting)
+  const getToolComponent = (toolName: string) => {
+    if (!toolSettings[toolName]) return null;
+    return getLazyTool(toolName);
+  };
+
+  const toolComponent = getToolComponent(currentPage);
+  const isToolPage = currentPage !== 'home' && toolComponent;
 
   return (
     <div className="min-h-screen bg-white">
@@ -151,7 +100,7 @@ export default function App() {
       ) : isToolPage ? (
         <div className="py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 min-h-[80vh]">
           <AdBanner slot="header" />
-          {toolPages[currentPage]}
+          {toolComponent}
         </div>
       ) : (
         <div className="py-20 text-center">
