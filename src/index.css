@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+  --color-sejda-green: #2ecc71;
+  --color-sejda-green-dark: #27ae60;
+  --color-sejda-dark: #2c3e50;
+  --color-sejda-blue: #3498db;
+  --color-sejda-orange: #e67e22;
+  --color-sejda-red: #e74c3c;
+  --color-sejda-purple: #9b59b6;
+  --color-sejda-teal: #1abc9c;
+  --color-sejda-gray: #95a5a6;
+  --color-sejda-light: #ecf0f1;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+}
