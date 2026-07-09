@@ -8,6 +8,7 @@ import CTA from './components/CTA';
 import Footer from './components/Footer';
 import AdBanner from './components/AdBanner';
 import DesktopSection from './components/DesktopSection';
+import { updateSEOMeta } from './utils/seoUtils';
 
 // PDF Tool pages
 import MergePDF from './tools/MergePDF';
@@ -76,6 +77,7 @@ export default function App() {
 
   useEffect(() => {
     setAdminLoggedIn(isLoggedIn());
+    updateSEOMeta(currentPage);
   }, [currentPage]);
 
   // Admin page
