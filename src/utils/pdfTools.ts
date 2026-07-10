@@ -1,5 +1,7 @@
 import { PDFDocument, degrees, rgb, StandardFonts } from 'pdf-lib';
 import JSZip from 'jszip';
+// @ts-ignore - Vite resolves this to a bundled asset URL at build time
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
 // ===== MERGE PDFs =====
 export async function mergePDFs(files: File[]): Promise<Uint8Array> {
@@ -265,7 +267,9 @@ export async function pdfToImages(
 ): Promise<{ name: string; blob: Blob }[]> {
   try {
     const pdfjs = await import('pdfjs-dist');
-    pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+    // Use the worker bundled with the app (not an external CDN) so PDF-to-Image
+    // works offline and isn't broken by CORS/CDN availability.
+    pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjs.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
